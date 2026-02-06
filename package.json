@@ -1,0 +1,27 @@
+{
+  "name": "app_quiet",
+  "version": "1.0.0",
+  "description": "Quiet App is a private creative writing app built with Flutter and Firebase.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Raman2308/quiet_app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Raman2308/quiet_app/issues"
+  },
+  "homepage": "https://github.com/Raman2308/quiet_app#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.0"
+  }
+}

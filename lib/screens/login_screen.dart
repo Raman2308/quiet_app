@@ -85,8 +85,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(error, style: const TextStyle(color: Colors.red)),
 
               const SizedBox(height: 10),
-
-              ElevatedButton(
+      Semantics(
+                   label: 'login-button',
+                   button: true,
+              child:  ElevatedButton(
+                  key: const Key('loginButton'),
                 onPressed: loading ? null : handleAuth,
                 child: Text(
                   loading
@@ -96,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       : "Sign Up",
                 ),
               ),
+            ),  
 
               TextButton(
                 onPressed: () => setState(() => isLogin = !isLogin),
