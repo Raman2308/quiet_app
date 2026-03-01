@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "986496188100",
+    "project_id": "quiet-app-afa49",
+    "storage_bucket": "quiet-app-afa49.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:986496188100:android:909a0f9b448b09dfe6d391",
+        "android_client_info": {
+          "package_name": "com.example.app_quiet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "986496188100-3sbm3hrdav5q94eavtm4d171itf621co.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDScHBgxWm9h_kMOm-wvRgAXND77U8MMMM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "986496188100-3sbm3hrdav5q94eavtm4d171itf621co.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

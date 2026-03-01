@@ -1,61 +1,54 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'features/auth/data/auth_repository_impl.dart';
+import 'features/auth/presentation/controllers/auth_controller.dart';
+import 'app/app.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import '../screens/login_screen.dart';
-import '../services/auth_service.dart';
-import '../screens/writing_screen.dart';
+import 'firebase_options.dart';
+import 'package:app_quiet/core/logger/app_logger.dart';
+import 'package:app_quiet/core/logger/console_logger.dart';
 
 void main() async {
+  print('[Main] Starting app initialization...');
+
   WidgetsFlutterBinding.ensureInitialized();
+  print('[Main] WidgetsFlutterBinding initialized');
 
-  await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: "AIzaSyCTrIoa5mweHiONqnz-shkwKnSq67GkA3o",
-      authDomain: "quiet-app-afa49.firebaseapp.com",
-      projectId: "quiet-app-afa49",
-      storageBucket: "quiet-app-afa49.firebasestorage.app",
-      messagingSenderId: "986496188100",
-      appId: "1:986496188100:web:43ea472c9322bb43e6d391",
-      measurementId: "G-1KWTFRMCEL",
-    ),
-  );
+  // initialize a concrete logger so AppLogger static helpers can be used
+  final systemLogger = ConsoleLogger();
+  AppLogger.initialize(systemLogger);
+  print('[Main] Logger system initialized');
 
-  runApp(const QuietApp());
-}
-
-class QuietApp extends StatelessWidget {
-  const QuietApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Quiet',
-      theme: ThemeData.dark(),
-      home: const AuthWrapper(),
+  try {
+    print('[Main] Initializing Firebase...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
     );
-  }
-}
-
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: AuthService().authStateChanges,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (snapshot.hasData) {
-          return const WritingScreen();
-        } else {
-          return const LoginScreen();
-        }
-      },
+    print('[Main] Firebase initialized successfully');
+  } catch (e, st) {
+    AppLogger.appError(
+      '[Main] Firebase initialization failed: ${e.toString()}',
+      error: e,
+      stackTrace: st,
     );
+    print('[Main] ERROR: Firebase initialization failed');
+    rethrow;
   }
+
+  // 2️⃣ Then create instances
+  print('[Main] Creating service instances...');
+  final logger = AppLogger();
+  final firebaseAuth = FirebaseAuth.instance;
+  final firestore = FirebaseFirestore.instance;
+  print('[Main] Service instances created');
+
+  // 3️⃣ Dependency injection
+  print('[Main] Setting up dependency injection...');
+  final authRepository = AuthRepositoryImpl(firebaseAuth, firestore, logger);
+  final authController = AuthController(authRepository);
+  print('[Main] Dependency injection complete');
+
+  print('[Main] Launching app...');
+  runApp(QuietApp(authController: authController));
 }

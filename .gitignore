@@ -46,3 +46,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Chrome Web / Browser Data (important for Flutter web)
+chrome-device/
+Account Web Data
+History
+Login Data
+Web Data
+Cookies
+# Firebase
+firebase-debug.log
+firebase-debug.*.log
+.env
+.env.local
