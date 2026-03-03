@@ -1,3 +1,7 @@
+import 'package:app_quiet/core/errors/failures.dart';
+import 'package:dartz/dartz.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../repositories/auth_repository.dart';
 
 class LoginUseCase {
@@ -5,7 +9,10 @@ class LoginUseCase {
 
   LoginUseCase(this.repository);
 
-  Future<void> call({required String email, required String password}) {
+  Future<Either<Failure, User>> call({
+    required String email,
+    required String password,
+  }) {
     return repository.login(email: email, password: password);
   }
 }

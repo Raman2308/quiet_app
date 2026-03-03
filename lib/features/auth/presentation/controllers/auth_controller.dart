@@ -20,43 +20,43 @@ class AuthController extends ChangeNotifier {
     print('[AuthController] login() called - Email: $email');
 
     _isLoading = true;
-    print('[AuthController] Setting isLoading to true');
     notifyListeners();
 
-    try {
-      print('[AuthController] Calling loginUseCase with email: $email');
-      await loginUseCase(email: email, password: password);
-      print('[AuthController] Login successful for email: $email');
-    } catch (e, stackTrace) {
-      print('[AuthController] ERROR: Login failed - $e');
-      print('[AuthController] Stack trace: $stackTrace');
-      rethrow;
-    } finally {
-      _isLoading = false;
-      print('[AuthController] Setting isLoading to false');
-      notifyListeners();
-    }
+    final result = await loginUseCase(email: email, password: password);
+
+    result.fold(
+      (failure) {
+        // ❌ Failure case
+        print('[AuthController] Login failed: ${failure.message}');
+      },
+      (user) {
+        // ✅ Success case
+        print('[AuthController] Login successful for email: ${user.email}');
+      },
+    );
+
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> signUp({required String email, required String password}) async {
     print('[AuthController] signUp() called - Email: $email');
 
     _isLoading = true;
-    print('[AuthController] Setting isLoading to true (signUp)');
     notifyListeners();
 
-    try {
-      print('[AuthController] Calling repository.signUp with email: $email');
-      await repository.signUp(email: email, password: password);
-      print('[AuthController] SignUp successful for email: $email');
-    } catch (e, stackTrace) {
-      print('[AuthController] ERROR: SignUp failed - $e');
-      print('[AuthController] Stack trace: $stackTrace');
-      rethrow;
-    } finally {
-      _isLoading = false;
-      print('[AuthController] Setting isLoading to false (signUp)');
-      notifyListeners();
-    }
+    final result = await repository.signUp(email: email, password: password);
+
+    result.fold(
+      (failure) {
+        print('[AuthController] SignUp failed: ${failure.message}');
+      },
+      (user) {
+        print('[AuthController] SignUp successful for email: ${user.email}');
+      },
+    );
+
+    _isLoading = false;
+    notifyListeners();
   }
 }

@@ -12,7 +12,7 @@ class AppLogger implements Logger {
 
   /// Static convenience: used in places that call AppLogger.info(...)
   static void appInfo(String message) {
-    if (!ConfigProvider.config.enableDebugLogs) return;
+    if (!ConfigProvider.instance.config.enableDebugLogs) return;
     _globalLogger.info(message);
   }
 

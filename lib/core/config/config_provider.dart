@@ -1,11 +1,19 @@
 import 'app_config.dart';
 
 class ConfigProvider {
-  static late AppConfig _config;
+  static final ConfigProvider instance = ConfigProvider._internal();
+  ConfigProvider._internal();
 
-  static void initialize(AppConfig config) {
+  AppConfig? _config;
+
+  void init(AppConfig config) {
     _config = config;
   }
 
-  static AppConfig get config => _config;
+  AppConfig get config {
+    if (_config == null) {
+      throw Exception('ConfigProvider not initialized. Call init() first.');
+    }
+    return _config!;
+  }
 }

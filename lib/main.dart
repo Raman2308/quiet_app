@@ -8,6 +8,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:app_quiet/core/logger/app_logger.dart';
 import 'package:app_quiet/core/logger/console_logger.dart';
+import 'package:app_quiet/core/config/config_provider.dart';
+import 'package:app_quiet/core/config/app_config.dart';
 
 void main() async {
   print('[Main] Starting app initialization...');
@@ -15,7 +17,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   print('[Main] WidgetsFlutterBinding initialized');
 
-  // initialize a concrete logger so AppLogger static helpers can be used
+  // ✅ 1️⃣ Initialize App Config FIRST
+  ConfigProvider.instance.init(
+    AppConfig.dev, // or prod() depending on your setup
+  );
+  print('[Main] Config initialized');
+
+  // ✅ 2️⃣ Initialize Logger AFTER config
   final systemLogger = ConsoleLogger();
   AppLogger.initialize(systemLogger);
   print('[Main] Logger system initialized');
@@ -32,22 +40,17 @@ void main() async {
       error: e,
       stackTrace: st,
     );
-    print('[Main] ERROR: Firebase initialization failed');
     rethrow;
   }
 
-  // 2️⃣ Then create instances
   print('[Main] Creating service instances...');
   final logger = AppLogger();
   final firebaseAuth = FirebaseAuth.instance;
   final firestore = FirebaseFirestore.instance;
-  print('[Main] Service instances created');
 
-  // 3️⃣ Dependency injection
   print('[Main] Setting up dependency injection...');
   final authRepository = AuthRepositoryImpl(firebaseAuth, firestore, logger);
   final authController = AuthController(authRepository);
-  print('[Main] Dependency injection complete');
 
   print('[Main] Launching app...');
   runApp(QuietApp(authController: authController));
