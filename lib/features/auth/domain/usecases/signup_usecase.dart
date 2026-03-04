@@ -4,15 +4,15 @@ import 'package:dartz/dartz.dart';
 
 import '../repositories/auth_repository.dart';
 
-class LoginUseCase {
+class SignUpUseCase {
   final AuthRepository repository;
 
-  LoginUseCase(this.repository);
+  SignUpUseCase(this.repository);
 
   Future<Either<Failure, AuthToken>> call({
     required String email,
     required String password,
   }) {
-    return repository.login(email: email, password: password);
+    return repository.signUp(email: email, password: password);
   }
 }
