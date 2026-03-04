@@ -21,25 +21,21 @@ class InjectionContainer {
   static late final TokenStorage _tokenStorage;
   static late final ApiClient _apiClient;
   static late final AuthRepository _authRepository;
-  static late final AuthenticatedApiClient _authenticatedApiClient;
+  static late final AuthInterceptor _authInterceptor;
 
   static Future<void> init() async {
     // ===== Logger =====
     _logger = ConsoleLogger();
     AppLogger.initialize(_logger);
 
-    // ===== TokenStorage (Singleton) =====
+    // ===== Token Storage =====
     _tokenStorage = TokenStorage();
 
-    // ===== ApiClient (Singleton, no auth initially) =====
-    _apiClient = ApiClient(
-      baseUrl: 'https://api.example.com', // Update with your actual base URL
-    );
-
-    // ===== AuthRepository (Singleton) =====
+    // ===== Firebase Instances =====
     final firebaseAuth = FirebaseAuth.instance;
     final firestore = FirebaseFirestore.instance;
 
+    // ===== Auth Repository =====
     _authRepository = AuthRepositoryImpl(
       firebaseAuth,
       firestore,
@@ -47,29 +43,29 @@ class InjectionContainer {
       _logger,
     );
 
-    // ===== AuthenticatedApiClient (wraps ApiClient + AuthRepository + TokenStorage) =====
-    _authenticatedApiClient = AuthenticatedApiClient(
-      apiClient: _apiClient,
-      authRepository: _authRepository,
-      tokenStorage: _tokenStorage,
-    );
-
-    // Update ApiClient with auth dependencies for 401 refresh handling
+    // ===== API Client =====
     _apiClient = ApiClient(
       baseUrl: 'https://api.example.com',
       tokenStorage: _tokenStorage,
       authRepository: _authRepository,
     );
+
+    // ===== Auth Interceptor =====
+    _authInterceptor = AuthInterceptor(
+      tokenStorage: _tokenStorage,
+      authRepository: _authRepository,
+    );
   }
 
-  // ===== AUTH =====
+  // =============================
+  // AUTH
+  // =============================
 
   static TokenStorage getTokenStorage() => _tokenStorage;
 
   static ApiClient getApiClient() => _apiClient;
 
-  static AuthenticatedApiClient getAuthenticatedApiClient() =>
-      _authenticatedApiClient;
+  static AuthInterceptor getAuthInterceptor() => _authInterceptor;
 
   static AuthRepository getAuthRepository() => _authRepository;
 
@@ -77,11 +73,15 @@ class InjectionContainer {
     return AuthController(_authRepository);
   }
 
-  // ===== QUIET =====
+  // =============================
+  // QUIET FEATURE
+  // =============================
 
   static PostRepository getPostRepository() {
     final firestore = FirebaseFirestore.instance;
+
     final remoteDataSource = PostRemoteDataSourceImpl(firestore, _logger);
+
     return PostRepositoryImpl(remoteDataSource, _logger);
   }
 
