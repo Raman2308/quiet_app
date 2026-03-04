@@ -1,4 +1,5 @@
 import 'package:app_quiet/core/entities/token.dart';
+import 'package:app_quiet/core/logger/app_logger.dart';
 import 'package:app_quiet/features/auth/domain/repositories/auth_repository.dart';
 import 'package:app_quiet/features/auth/domain/usecases/login_usecase.dart';
 import 'package:app_quiet/features/auth/domain/usecases/signup_usecase.dart';
@@ -22,7 +23,7 @@ class AuthController extends ChangeNotifier {
     loginUseCase = LoginUseCase(repository);
     signUpUseCase = SignUpUseCase(repository);
     refreshTokenUseCase = RefreshTokenUseCase(repository);
-    print(
+    AppLogger.appInfo(
       '[AuthController] Initialized with repository: ${repository.runtimeType}',
     );
     _initializeToken();
@@ -30,7 +31,28 @@ class AuthController extends ChangeNotifier {
 
   /// Initialize token from cached token on startup
   Future<void> _initializeToken() async {
+    AppLogger.appInfo('[AuthController] Initializing cached token on startup');
     _currentToken = await repository.getCachedToken();
+    if (_currentToken != null) {
+      if (_isTokenExpired()) {
+        AppLogger.appInfo(
+          '[AuthController] Cached token expired on startup | '
+          'Expiry: ${_currentToken!.expiry.toIso8601String()}',
+        );
+      } else {
+        final timeRemaining = _currentToken!.expiry
+            .difference(DateTime.now())
+            .inMinutes;
+        AppLogger.appInfo(
+          '[AuthController] Cached token restored | '
+          'Expires in: $timeRemaining minutes',
+        );
+      }
+    } else {
+      AppLogger.appInfo(
+        '[AuthController] No cached token available on startup',
+      );
+    }
     notifyListeners();
   }
 
@@ -41,7 +63,7 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> login({required String email, required String password}) async {
-    print('[AuthController] login() called - Email: $email');
+    AppLogger.appInfo('[AuthController] Login attempt - Email: $email');
 
     _isLoading = true;
     notifyListeners();
@@ -50,14 +72,15 @@ class AuthController extends ChangeNotifier {
 
     result.fold(
       (failure) {
-        // ❌ Failure case
-        print('[AuthController] Login failed: ${failure.message}');
+        AppLogger.appError('[AuthController] Login failed: ${failure.message}');
         _currentToken = null;
       },
       (token) {
-        // ✅ Success case
-        print(
-          '[AuthController] Login successful - Token expires at: ${token.expiry}',
+        final timeRemaining = token.expiry.difference(DateTime.now()).inMinutes;
+        AppLogger.appInfo(
+          '[AuthController] Login successful | '
+          'Token expires in: $timeRemaining minutes | '
+          'Expiry: ${token.expiry.toIso8601String()}',
         );
         _currentToken = token;
         repository.saveToken(token);
@@ -69,7 +92,7 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> signUp({required String email, required String password}) async {
-    print('[AuthController] signUp() called - Email: $email');
+    AppLogger.appInfo('[AuthController] SignUp attempt - Email: $email');
 
     _isLoading = true;
     notifyListeners();
@@ -78,12 +101,17 @@ class AuthController extends ChangeNotifier {
 
     result.fold(
       (failure) {
-        print('[AuthController] SignUp failed: ${failure.message}');
+        AppLogger.appError(
+          '[AuthController] SignUp failed: ${failure.message}',
+        );
         _currentToken = null;
       },
       (token) {
-        print(
-          '[AuthController] SignUp successful - Token expires at: ${token.expiry}',
+        final timeRemaining = token.expiry.difference(DateTime.now()).inMinutes;
+        AppLogger.appInfo(
+          '[AuthController] SignUp successful | '
+          'Token expires in: $timeRemaining minutes | '
+          'Expiry: ${token.expiry.toIso8601String()}',
         );
         _currentToken = token;
         repository.saveToken(token);
@@ -97,24 +125,41 @@ class AuthController extends ChangeNotifier {
   /// Refresh the authentication token
   Future<bool> refreshAuthToken() async {
     if (_currentToken == null) {
-      print('[AuthController] No token to refresh');
+      AppLogger.appInfo(
+        '[AuthController] Token refresh skipped - No token available',
+      );
       return false;
     }
 
-    print('[AuthController] Refreshing token...');
+    final currentExpiry = _currentToken!.expiry;
+    final timeRemaining = currentExpiry.difference(DateTime.now()).inMinutes;
+    AppLogger.appInfo(
+      '[AuthController] Attempting token refresh | '
+      'Current token expires in: $timeRemaining minutes',
+    );
 
     final result = await refreshTokenUseCase(_currentToken!.refreshToken);
 
     return result.fold(
       (failure) {
-        print('[AuthController] Token refresh failed: ${failure.message}');
+        AppLogger.appError(
+          '[AuthController] Token refresh failed: ${failure.message}',
+        );
         _currentToken = null;
         return false;
       },
-      (token) {
-        print('[AuthController] Token refreshed - New expiry: ${token.expiry}');
-        _currentToken = token;
-        repository.saveToken(token);
+      (newToken) {
+        final newTimeRemaining = newToken.expiry
+            .difference(DateTime.now())
+            .inMinutes;
+        AppLogger.appInfo(
+          '[AuthController] Token refresh successful | '
+          'Old expiry: ${currentExpiry.toIso8601String()} | '
+          'New expiry: ${newToken.expiry.toIso8601String()} | '
+          'New token expires in: $newTimeRemaining minutes',
+        );
+        _currentToken = newToken;
+        repository.saveToken(newToken);
         notifyListeners();
         return true;
       },
@@ -122,14 +167,25 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    print('[AuthController] logout() called');
+    AppLogger.appInfo('[AuthController] Logout initiated');
 
     _isLoading = true;
     notifyListeners();
 
-    await repository.logout();
-    await repository.clearTokens();
-    _currentToken = null;
+    try {
+      await repository.logout();
+      AppLogger.appInfo('[AuthController] Repository logout complete');
+
+      await repository.clearTokens();
+      AppLogger.appInfo('[AuthController] All tokens cleared');
+
+      _currentToken = null;
+      AppLogger.appInfo(
+        '[AuthController] Logout successful - User session ended',
+      );
+    } catch (e) {
+      AppLogger.appError('[AuthController] Logout failed: $e', error: e);
+    }
 
     _isLoading = false;
     notifyListeners();

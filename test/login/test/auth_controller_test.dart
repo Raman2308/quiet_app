@@ -78,7 +78,7 @@ void main() {
         refreshToken: 'refresh_token',
         expiry: DateTime.now().add(const Duration(hours: 1)),
       );
-      
+
       // Set initial cached token
       fakeRepo.cachedToken = oldToken;
       await controller.saveToken(oldToken);
@@ -108,7 +108,7 @@ void main() {
         refreshToken: 'refresh_token',
         expiry: DateTime.now().add(const Duration(hours: 1)),
       );
-      
+
       fakeRepo.cachedToken = token;
       await controller.saveToken(token);
 
@@ -125,4 +125,3 @@ void main() {
     });
   });
 }
-
