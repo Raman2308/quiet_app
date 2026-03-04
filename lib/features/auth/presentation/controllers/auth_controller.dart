@@ -1,10 +1,10 @@
-import 'package:app_quiet/core/entities/token.dart';
 import 'package:app_quiet/core/logger/app_logger.dart';
 import 'package:app_quiet/features/auth/domain/repositories/auth_repository.dart';
 import 'package:app_quiet/features/auth/domain/usecases/login_usecase.dart';
 import 'package:app_quiet/features/auth/domain/usecases/signup_usecase.dart';
 import 'package:app_quiet/features/auth/domain/usecases/refresh_token_usecase.dart';
 import 'package:flutter/foundation.dart';
+import 'package:app_quiet/features/auth/domain/entities/auth_token.dart';
 
 class AuthController extends ChangeNotifier {
   final AuthRepository repository;
@@ -37,10 +37,10 @@ class AuthController extends ChangeNotifier {
       if (_isTokenExpired()) {
         AppLogger.appInfo(
           '[AuthController] Cached token expired on startup | '
-          'Expiry: ${_currentToken!.expiry.toIso8601String()}',
+          'Expiry: ${_currentToken!.expiresAt.toIso8601String()}',
         );
       } else {
-        final timeRemaining = _currentToken!.expiry
+        final timeRemaining = _currentToken!.expiresAt
             .difference(DateTime.now())
             .inMinutes;
         AppLogger.appInfo(
@@ -59,7 +59,7 @@ class AuthController extends ChangeNotifier {
   /// Check if the current token has expired
   bool _isTokenExpired() {
     if (_currentToken == null) return true;
-    return _currentToken!.expiry.isBefore(DateTime.now());
+    return _currentToken!.expiresAt.isBefore(DateTime.now());
   }
 
   Future<void> login({required String email, required String password}) async {
@@ -76,11 +76,13 @@ class AuthController extends ChangeNotifier {
         _currentToken = null;
       },
       (token) {
-        final timeRemaining = token.expiry.difference(DateTime.now()).inMinutes;
+        final timeRemaining = token.expiresAt
+            .difference(DateTime.now())
+            .inMinutes;
         AppLogger.appInfo(
           '[AuthController] Login successful | '
           'Token expires in: $timeRemaining minutes | '
-          'Expiry: ${token.expiry.toIso8601String()}',
+          'Expiry: ${token.expiresAt.toIso8601String()}',
         );
         _currentToken = token;
         repository.saveToken(token);
@@ -107,11 +109,13 @@ class AuthController extends ChangeNotifier {
         _currentToken = null;
       },
       (token) {
-        final timeRemaining = token.expiry.difference(DateTime.now()).inMinutes;
+        final timeRemaining = token.expiresAt
+            .difference(DateTime.now())
+            .inMinutes;
         AppLogger.appInfo(
           '[AuthController] SignUp successful | '
           'Token expires in: $timeRemaining minutes | '
-          'Expiry: ${token.expiry.toIso8601String()}',
+          'Expiry: ${token.expiresAt.toIso8601String()}',
         );
         _currentToken = token;
         repository.saveToken(token);
@@ -131,7 +135,7 @@ class AuthController extends ChangeNotifier {
       return false;
     }
 
-    final currentExpiry = _currentToken!.expiry;
+    final currentExpiry = _currentToken!.expiresAt;
     final timeRemaining = currentExpiry.difference(DateTime.now()).inMinutes;
     AppLogger.appInfo(
       '[AuthController] Attempting token refresh | '
@@ -149,13 +153,13 @@ class AuthController extends ChangeNotifier {
         return false;
       },
       (newToken) {
-        final newTimeRemaining = newToken.expiry
+        final newTimeRemaining = newToken.expiresAt
             .difference(DateTime.now())
             .inMinutes;
         AppLogger.appInfo(
           '[AuthController] Token refresh successful | '
           'Old expiry: ${currentExpiry.toIso8601String()} | '
-          'New expiry: ${newToken.expiry.toIso8601String()} | '
+          'New expiry: ${newToken.expiresAt.toIso8601String()} | '
           'New token expires in: $newTimeRemaining minutes',
         );
         _currentToken = newToken;

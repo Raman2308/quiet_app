@@ -1,5 +1,4 @@
-import 'package:app_quiet/core/entities/token.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:app_quiet/features/auth/domain/entities/auth_token.dart';
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 
@@ -11,7 +10,7 @@ abstract class AuthRepository {
   });
 
   /// Sign up with email and password, returns created `User` on success
-  Future<Either<Failure, User>> signUp({
+  Future<Either<Failure, AuthToken>> signUp({
     required String email,
     required String password,
   });

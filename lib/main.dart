@@ -1,3 +1,4 @@
+import 'package:app_quiet/core/security/token_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'features/auth/data/auth_repository_impl.dart';
@@ -47,9 +48,15 @@ void main() async {
   final logger = AppLogger();
   final firebaseAuth = FirebaseAuth.instance;
   final firestore = FirebaseFirestore.instance;
+  final tokenStorage = TokenStorage(); // Create tokenStorage instance
 
   print('[Main] Setting up dependency injection...');
-  final authRepository = AuthRepositoryImpl(firebaseAuth, firestore, logger);
+  final authRepository = AuthRepositoryImpl(
+    firebaseAuth,
+    firestore,
+    tokenStorage,
+    logger,
+  );
   final authController = AuthController(authRepository);
 
   print('[Main] Launching app...');

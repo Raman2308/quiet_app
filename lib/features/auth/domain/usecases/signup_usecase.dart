@@ -1,6 +1,6 @@
 import 'package:app_quiet/core/errors/failures.dart';
 import 'package:dartz/dartz.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:app_quiet/features/auth/domain/entities/auth_token.dart';
 
 import '../repositories/auth_repository.dart';
 
@@ -9,7 +9,7 @@ class SignUpUseCase {
 
   SignUpUseCase(this.repository);
 
-  Future<Either<Failure, User>> call({
+  Future<Either<Failure, AuthToken>> call({
     required String email,
     required String password,
   }) {

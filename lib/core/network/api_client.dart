@@ -1,9 +1,7 @@
 import 'dart:convert';
-import 'package:dartz/dartz.dart';
 import 'package:http/http.dart' as http;
 import '../security/token_storage.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
-import '../../core/entities/auth_token.dart';
 
 /// Simple reusable API client supporting GET/POST/PUT/DELETE with JSON
 /// encoding/decoding, baseUrl configuration and common headers.

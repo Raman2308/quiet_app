@@ -1,7 +1,7 @@
 import '../security/token_storage.dart';
 import 'api_client.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
-import '../../core/entities/auth_token.dart';
+import '../../features/auth/domain/entities/auth_token.dart';
 
 /// Wrapper around [ApiClient] that ensures requests include a valid
 /// Authorization header. If the access token is expired it will attempt
@@ -63,8 +63,9 @@ class AuthenticatedApiClient {
   }
 
   Future<dynamic> _executeWithAuth(
-    Future<dynamic> Function(Map<String, String> headers) request,
-  ) async {
+    Future<dynamic> Function(Map<String, String> headers) request, {
+    bool retrying = false,
+  }) async {
     // Ensure token valid before first attempt
     await _ensureValidToken();
     var token = await authRepository.getCachedToken();
@@ -85,12 +86,13 @@ class AuthenticatedApiClient {
       return await request(_authHeaderForToken(token));
     } on ApiException catch (e) {
       // If unauthorized, attempt refresh and retry once
-      if (e.statusCode == 401) {
+      if (e.statusCode == 401 && !retrying) {
         final refreshed = await _ensureValidToken();
         if (!refreshed) rethrow;
 
         final newToken = await authRepository.getCachedToken();
-        return await request(_authHeaderForToken(newToken));
+
+        return _executeWithAuth(request, retrying: true);
       }
       rethrow;
     }
