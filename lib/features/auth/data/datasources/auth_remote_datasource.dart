@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import '../../../../core/network/api_client.dart';
-import '../../../../core/entities/auth_token.dart';
+import 'package:app_quiet/features/auth/domain/entities/auth_token.dart';
 
 /// Exception thrown when remote datasource fails
 class RemoteDataSourceException implements Exception {
