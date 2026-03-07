@@ -22,7 +22,9 @@ class InjectionContainer {
   static late final ApiClient _apiClient;
   static late final AuthRepository _authRepository;
   static late final AuthInterceptor _authInterceptor;
-
+  static late final PostRepository _postRepository;
+  static late final FirebaseFirestore _firestore;
+  static late final FirebaseAuth _firebaseAuth;
   static Future<void> init() async {
     // ===== Logger =====
     _logger = ConsoleLogger();
@@ -34,7 +36,8 @@ class InjectionContainer {
     // ===== Firebase Instances =====
     final firebaseAuth = FirebaseAuth.instance;
     final firestore = FirebaseFirestore.instance;
-
+    _firebaseAuth = FirebaseAuth.instance;
+    _firestore = FirebaseFirestore.instance;
     // ===== Auth Repository =====
     _authRepository = AuthRepositoryImpl(
       firebaseAuth,
@@ -42,7 +45,11 @@ class InjectionContainer {
       _tokenStorage,
       _logger,
     );
+    // ===== QUIET FEATURE =====
 
+    final remoteDataSource = PostRemoteDataSourceImpl(firestore, _logger);
+
+    _postRepository = PostRepositoryImpl(remoteDataSource, _logger);
     // ===== API Client =====
     _apiClient = ApiClient(
       baseUrl: 'https://api.example.com',
@@ -77,15 +84,5 @@ class InjectionContainer {
   // QUIET FEATURE
   // =============================
 
-  static PostRepository getPostRepository() {
-    final firestore = FirebaseFirestore.instance;
-
-    final remoteDataSource = PostRemoteDataSourceImpl(firestore, _logger);
-
-    return PostRepositoryImpl(remoteDataSource, _logger);
-  }
-
-  static PostRepository initPostRepository() {
-    return getPostRepository();
-  }
+  static PostRepository getPostRepository() => _postRepository;
 }

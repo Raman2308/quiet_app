@@ -1,64 +1,78 @@
-import 'package:app_quiet/core/security/token_storage.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'features/auth/data/auth_repository_impl.dart';
-import 'features/auth/presentation/controllers/auth_controller.dart';
-import 'app/app.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 import 'firebase_options.dart';
-import 'package:app_quiet/core/logger/app_logger.dart';
-import 'package:app_quiet/core/logger/console_logger.dart';
+
 import 'package:app_quiet/core/config/config_provider.dart';
 import 'package:app_quiet/core/config/app_config.dart';
 
+import 'package:app_quiet/core/logger/app_logger.dart';
+import 'package:app_quiet/core/logger/console_logger.dart';
+
+import 'package:app_quiet/core/injection/injection_container.dart';
+
+import 'package:app_quiet/features/auth/presentation/controllers/auth_controller.dart';
+
+import 'package:app_quiet/app/app.dart';
+
 void main() async {
-  print('[Main] Starting app initialization...');
-
   WidgetsFlutterBinding.ensureInitialized();
-  print('[Main] WidgetsFlutterBinding initialized');
 
-  // ✅ 1️⃣ Initialize App Config FIRST
+  // =============================
+  // APP CONFIG
+  // =============================
+
   ConfigProvider.instance.init(
-    AppConfig.dev, // or prod() depending on your setup
+    AppConfig.dev, // switch to prod() in production
   );
-  print('[Main] Config initialized');
 
-  // ✅ 2️⃣ Initialize Logger AFTER config
+  // =============================
+  // LOGGER
+  // =============================
+
   final systemLogger = ConsoleLogger();
   AppLogger.initialize(systemLogger);
-  print('[Main] Logger system initialized');
+
+  AppLogger.appInfo('[Main] Starting app initialization');
+
+  // =============================
+  // FIREBASE
+  // =============================
 
   try {
-    print('[Main] Initializing Firebase...');
+    AppLogger.appInfo('[Main] Initializing Firebase...');
+
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    print('[Main] Firebase initialized successfully');
+
+    AppLogger.appInfo('[Main] Firebase initialized successfully');
   } catch (e, st) {
     AppLogger.appError(
-      '[Main] Firebase initialization failed: ${e.toString()}',
+      '[Main] Firebase initialization failed',
       error: e,
       stackTrace: st,
     );
     rethrow;
   }
 
-  print('[Main] Creating service instances...');
-  final logger = AppLogger();
-  final firebaseAuth = FirebaseAuth.instance;
-  final firestore = FirebaseFirestore.instance;
-  final tokenStorage = TokenStorage(); // Create tokenStorage instance
+  // =============================
+  // DEPENDENCY INJECTION
+  // =============================
 
-  print('[Main] Setting up dependency injection...');
-  final authRepository = AuthRepositoryImpl(
-    firebaseAuth,
-    firestore,
-    tokenStorage,
-    logger,
-  );
-  final authController = AuthController(authRepository);
+  await InjectionContainer.init();
 
-  print('[Main] Launching app...');
+  // =============================
+  // AUTH CONTROLLER
+  // =============================
+
+  final AuthController authController = InjectionContainer.initAuthController();
+
+  AppLogger.appInfo('[Main] Launching app...');
+
+  // =============================
+  // RUN APP
+  // =============================
+
   runApp(QuietApp(authController: authController));
 }

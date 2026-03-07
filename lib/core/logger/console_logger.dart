@@ -9,7 +9,7 @@ class ConsoleLogger implements Logger {
   @override
   void error(String message, {Object? error, StackTrace? stackTrace}) {
     print('[ERROR] $message');
-    if (error != null) print(error);
-    if (stackTrace != null) print(stackTrace);
+    if (error != null) print(error.toString());
+    if (stackTrace != null) print(stackTrace.toString());
   }
 }

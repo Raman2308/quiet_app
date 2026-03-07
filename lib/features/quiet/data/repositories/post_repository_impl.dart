@@ -14,10 +14,18 @@ class PostRepositoryImpl implements PostRepository {
   PostRepositoryImpl(this.remoteDataSource, this.logger);
 
   @override
-  Future<Either<Failure, void>> addPost(Post post) async {
+  Future<Either<Failure, void>> addPost(Post content) async {
     try {
+      final post = Post(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        content: content.toString(),
+        createdAt: DateTime.now(),
+      );
+
       await remoteDataSource.addPost(post);
+
       logger.info("PostRepository | addPost | Success");
+
       return const Right(null);
     } catch (e, stackTrace) {
       logger.error(
@@ -25,6 +33,7 @@ class PostRepositoryImpl implements PostRepository {
         error: e,
         stackTrace: stackTrace,
       );
+
       return Left(ServerFailure("Failed to add post"));
     }
   }
@@ -33,7 +42,9 @@ class PostRepositoryImpl implements PostRepository {
   Future<Either<Failure, List<Post>>> getPosts() async {
     try {
       final posts = await remoteDataSource.getPosts();
+
       logger.info("PostRepository | getPosts | Success");
+
       return Right(posts);
     } catch (e, stackTrace) {
       logger.error(
@@ -41,6 +52,7 @@ class PostRepositoryImpl implements PostRepository {
         error: e,
         stackTrace: stackTrace,
       );
+
       return Left(ServerFailure("Failed to fetch posts"));
     }
   }

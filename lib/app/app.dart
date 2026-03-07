@@ -1,3 +1,4 @@
+import 'package:app_quiet/core/logger/app_logger.dart';
 import 'package:flutter/material.dart';
 import '../features/auth/presentation/controllers/auth_controller.dart';
 import 'router.dart';
@@ -9,14 +10,14 @@ class QuietApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('[QuietApp] Created with AuthController');
+    AppLogger.appInfo('[QuietApp] Created with AuthController');
 
-    print('[QuietApp] Building app UI...');
+    AppLogger.appInfo('[QuietApp] Building app UI...');
     return MaterialApp(
       title: 'Quiet App',
       debugShowCheckedModeBanner: false,
       onGenerateRoute: (settings) {
-        print('[QuietApp] Generating route for: ${settings.name}');
+        AppLogger.appInfo('[QuietApp] Generating route for: ${settings.name}');
         return AppRouter(
           authController: authController,
         ).generateRoute(settings);

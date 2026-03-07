@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+
 import 'package:app_quiet/features/quiet/domain/entities/post.dart';
 import 'package:app_quiet/features/quiet/domain/repositories/post_repository.dart';
+
 import 'package:app_quiet/core/logger/logger.dart';
 
 class WritingScreen extends StatefulWidget {
@@ -19,35 +21,55 @@ class WritingScreen extends StatefulWidget {
 
 class _WritingScreenState extends State<WritingScreen> {
   final TextEditingController _controller = TextEditingController();
+
   bool _isLoading = false;
 
   Future<void> _submit() async {
+    final content = _controller.text.trim();
+
+    /// Validation
+    if (content.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Post cannot be empty")));
+      return;
+    }
+
     setState(() => _isLoading = true);
 
-    final post = Post(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      content: _controller.text,
-      createdAt: DateTime.now(),
-    );
+    /// Create Post entity using factory
+    final post = Post.create(content);
 
     final result = await widget.postRepository.addPost(post);
 
     result.fold(
       (failure) {
         widget.logger.error("WritingScreen | Failure | ${failure.message}");
+
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(failure.message)));
       },
       (_) {
         widget.logger.info("WritingScreen | Success");
+
+        _controller.clear();
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Post added successfully")),
         );
       },
     );
 
-    setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -60,14 +82,27 @@ class _WritingScreenState extends State<WritingScreen> {
           children: [
             TextField(
               controller: _controller,
-              decoration: const InputDecoration(hintText: "Write something..."),
+              maxLines: 5,
+              decoration: const InputDecoration(
+                hintText: "Write something...",
+                border: OutlineInputBorder(),
+              ),
             ),
+
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _submit,
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text("Submit"),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _submit,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text("Submit"),
+              ),
             ),
           ],
         ),

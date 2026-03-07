@@ -1,31 +1,43 @@
+import 'package:app_quiet/core/injection/injection_container.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:app_quiet/core/logger/app_logger.dart';
+
 import '../features/auth/presentation/controllers/auth_controller.dart';
-import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/auth_page.dart';
+
 import '../features/quiet/presentation/writing_screen.dart';
-import '../features/quiet/domain/repositories/post_repository.dart';
 
 class AppRouter {
   final AuthController authController;
 
   AppRouter({required this.authController}) {
-    print('[AppRouter] Initialized');
+    AppLogger.appInfo('[AppRouter] Initialized');
   }
 
   Route<dynamic> generateRoute(RouteSettings settings) {
-    print('[AppRouter] generateRoute: ${settings.name}');
+    AppLogger.appInfo('[AppRouter] generateRoute: ${settings.name}');
 
     switch (settings.name) {
+      /// AUTH PAGE (Login + Signup)
       case '/':
-        print('[AppRouter] Loading login screen');
+      case '/auth':
+        AppLogger.appInfo('[AppRouter] Loading AuthPage');
+
         return MaterialPageRoute(
-          builder: (_) => LoginScreen(authController: authController),
+          builder: (_) => ChangeNotifierProvider.value(
+            value: authController,
+            child: const AuthPage(),
+          ),
         );
 
+      /// WRITING SCREEN
       case '/write':
-        print('[AppRouter] Loading writing screen');
+        AppLogger.appInfo('[AppRouter] Loading WritingScreen');
+
         try {
-          final postRepository = settings.arguments as PostRepository;
+          final postRepository = InjectionContainer.getPostRepository();
+
           return MaterialPageRoute(
             builder: (_) => WritingScreen(
               postRepository: postRepository,
@@ -33,12 +45,22 @@ class AppRouter {
             ),
           );
         } catch (e) {
-          print('[AppRouter] ERROR: Failed to load writing screen - $e');
-          rethrow;
+          AppLogger.appError(
+            '[AppRouter] Failed to load writing screen',
+            error: e,
+          );
+
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(child: Text("Failed to open writing screen")),
+            ),
+          );
         }
 
+      /// UNKNOWN ROUTE
       default:
-        print('[AppRouter] Route not found: ${settings.name}');
+        AppLogger.appInfo('[AppRouter] Route not found: ${settings.name}');
+
         return MaterialPageRoute(
           builder: (_) =>
               const Scaffold(body: Center(child: Text("Route not found"))),

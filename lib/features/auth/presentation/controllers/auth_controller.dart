@@ -14,10 +14,12 @@ class AuthController extends ChangeNotifier {
 
   AuthToken? _currentToken;
   bool _isLoading = false;
+  String? _errorMessage;
 
   AuthToken? get currentToken => _currentToken;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _currentToken != null && !_isTokenExpired();
+  String? get errorMessage => _errorMessage;
 
   AuthController(this.repository) {
     loginUseCase = LoginUseCase(repository);
@@ -73,6 +75,7 @@ class AuthController extends ChangeNotifier {
     result.fold(
       (failure) {
         AppLogger.appError('[AuthController] Login failed: ${failure.message}');
+        _errorMessage = failure.message;
         _currentToken = null;
       },
       (token) {
@@ -85,6 +88,7 @@ class AuthController extends ChangeNotifier {
           'Expiry: ${token.expiresAt.toIso8601String()}',
         );
         _currentToken = token;
+        _errorMessage = null;
         repository.saveToken(token);
       },
     );
@@ -106,6 +110,7 @@ class AuthController extends ChangeNotifier {
         AppLogger.appError(
           '[AuthController] SignUp failed: ${failure.message}',
         );
+        _errorMessage = failure.message;
         _currentToken = null;
       },
       (token) {
@@ -118,6 +123,7 @@ class AuthController extends ChangeNotifier {
           'Expiry: ${token.expiresAt.toIso8601String()}',
         );
         _currentToken = token;
+        _errorMessage = null;
         repository.saveToken(token);
       },
     );
