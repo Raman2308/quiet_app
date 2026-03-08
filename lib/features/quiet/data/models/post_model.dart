@@ -6,6 +6,7 @@ class PostModel extends Post {
     required super.id,
     required super.content,
     required super.createdAt,
+    required super.userId,
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json, String id) {
@@ -25,6 +26,7 @@ class PostModel extends Post {
       id: id,
       content: json['content'] ?? '',
       createdAt: parsedDate,
+      userId: json['userId'] ?? '',
     );
   }
 
@@ -32,6 +34,7 @@ class PostModel extends Post {
     return {
       'content': content,
       'createdAt': Timestamp.fromDate(createdAt),
+      'userId': userId,
     };
   }
 }

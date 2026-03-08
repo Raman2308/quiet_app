@@ -1,20 +1,25 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Post {
   final String id;
   final String content;
   final DateTime createdAt;
+  final String userId;
 
   const Post({
     required this.id,
     required this.content,
     required this.createdAt,
+    required this.userId,
   });
 
   /// Factory for creating a new post
   factory Post.create(String content) {
     return Post(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: '',
       content: content,
       createdAt: DateTime.now(),
+      userId: '',
     );
   }
 
@@ -23,7 +28,8 @@ class Post {
     return {
       'id': id,
       'content': content,
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': Timestamp.fromDate(createdAt),
+      'userId': userId,
     };
   }
 
@@ -33,15 +39,22 @@ class Post {
       id: json['id'],
       content: json['content'],
       createdAt: DateTime.parse(json['createdAt']),
+      userId: json['userId'],
     );
   }
 
   /// Copy method (useful for updates)
-  Post copyWith({String? id, String? content, DateTime? createdAt}) {
+  Post copyWith({
+    String? id,
+    String? content,
+    DateTime? createdAt,
+    String? userId,
+  }) {
     return Post(
       id: id ?? this.id,
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
+      userId: userId ?? this.userId,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'firebase_options.dart';
 
@@ -17,14 +18,11 @@ import 'package:app_quiet/app/app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   // =============================
   // APP CONFIG
   // =============================
 
-  ConfigProvider.instance.init(
-    AppConfig.dev, // switch to prod() in production
-  );
+  ConfigProvider.instance.init(AppConfig.dev);
 
   // =============================
   // LOGGER
@@ -47,6 +45,18 @@ void main() async {
     );
 
     AppLogger.appInfo('[Main] Firebase initialized successfully');
+
+    // =============================
+    // FIRESTORE WEB FIX
+    // =============================
+
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: false,
+      sslEnabled: true,
+    );
+
+    await FirebaseFirestore.instance.enableNetwork();
+    AppLogger.appInfo('[Main] Firestore configured for web compatibility');
   } catch (e, st) {
     AppLogger.appError(
       '[Main] Firebase initialization failed',

@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/logger/logger.dart';
@@ -14,15 +15,13 @@ class PostRepositoryImpl implements PostRepository {
   PostRepositoryImpl(this.remoteDataSource, this.logger);
 
   @override
-  Future<Either<Failure, void>> addPost(Post content) async {
+  Future<Either<Failure, void>> addPost(Post post) async {
     try {
-      final post = Post(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        content: content.toString(),
-        createdAt: DateTime.now(),
-      );
+      final uid = FirebaseAuth.instance.currentUser!.uid;
 
-      await remoteDataSource.addPost(post);
+      final postWithUser = post.copyWith(userId: uid);
+      logger.info("Firebase UID: $uid");
+      await remoteDataSource.addPost(postWithUser);
 
       logger.info("PostRepository | addPost | Success");
 
@@ -33,7 +32,9 @@ class PostRepositoryImpl implements PostRepository {
         error: e,
         stackTrace: stackTrace,
       );
-
+      logger.info(
+        "Current Firebase UID: ${FirebaseAuth.instance.currentUser?.uid}",
+      );
       return Left(ServerFailure("Failed to add post"));
     }
   }
@@ -41,7 +42,9 @@ class PostRepositoryImpl implements PostRepository {
   @override
   Future<Either<Failure, List<Post>>> getPosts() async {
     try {
-      final posts = await remoteDataSource.getPosts();
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+
+      final posts = await remoteDataSource.getPosts(uid);
 
       logger.info("PostRepository | getPosts | Success");
 

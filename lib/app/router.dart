@@ -1,4 +1,5 @@
 import 'package:app_quiet/core/injection/injection_container.dart';
+import 'package:app_quiet/features/quiet/domain/usecases/publish_post.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:app_quiet/core/logger/app_logger.dart';
@@ -40,7 +41,7 @@ class AppRouter {
 
           return MaterialPageRoute(
             builder: (_) => WritingScreen(
-              postRepository: postRepository,
+              publishPost: PublishPost(postRepository),
               logger: AppLogger(),
             ),
           );

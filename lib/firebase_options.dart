@@ -41,13 +41,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCTrIoa5mweHiONqnz-shkwKnSq67GkA3o',
-    appId: '1:986496188100:web:43ea472c9322bb43e6d391',
+    apiKey: 'AIzaSyAnqqVC1ik2rKny6i3IdGb8X_9KxFDlths',
+    appId: '1:986496188100:web:880e9d2536d261e6e6d391',
     messagingSenderId: '986496188100',
     projectId: 'quiet-app-afa49',
     authDomain: 'quiet-app-afa49.firebaseapp.com',
     storageBucket: 'quiet-app-afa49.firebasestorage.app',
-    measurementId: 'G-1KWTFRMCEL',
+    measurementId: 'G-P976HD8MS6',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -87,4 +87,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'quiet-app-afa49.firebasestorage.app',
     measurementId: 'G-P976HD8MS6',
   );
+
 }
