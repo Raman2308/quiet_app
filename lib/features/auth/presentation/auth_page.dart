@@ -1,3 +1,5 @@
+import 'package:app_quiet/core/logger/app_logger.dart';
+import 'package:app_quiet/features/auth/data/datasources/google_auth_service.dart';
 import 'package:app_quiet/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -22,9 +24,7 @@ class _AuthPageState extends State<AuthPage> {
     final controller = context.watch<AuthController>();
 
     if (controller.isAuthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacementNamed(context, '/write');
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {});
     }
   }
 
@@ -103,9 +103,24 @@ class _AuthPageState extends State<AuthPage> {
                 const SizedBox(height: 16),
 
                 OutlinedButton.icon(
-                  onPressed: () {},
                   icon: const Icon(Icons.login),
                   label: const Text("Continue with Google"),
+                  onPressed: () async {
+                    final result = await GoogleAuthService().signIn();
+
+                    result.fold(
+                      (failure) {
+                        AppLogger.appError("Login failed: ${failure.message}");
+                      },
+                      (user) {
+                        AppLogger.appInfo("Logged in: ${user.email}");
+
+                        final controller = context.read<AuthController>();
+                        controller.setAuthenticated(user);
+                        WidgetsBinding.instance.addPostFrameCallback((_) {});
+                      },
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 20),

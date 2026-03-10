@@ -17,15 +17,13 @@ class NetworkFailure extends Failure {
 }
 
 class AuthFailure extends Failure {
-   AuthFailure(super.message);
+  AuthFailure(super.message);
 }
 
 class ValidationFailure extends Failure {
-   ValidationFailure(super.message);
+  ValidationFailure(super.message);
 }
+
 class UnknownFailure extends Failure {
-   UnknownFailure([super.message = "Unexpected error"]) {
-           // TODO: implement UnknownFailure
-           throw UnimplementedError();
-         }
+  UnknownFailure([super.message = "Unexpected error"]) {}
 }

@@ -34,6 +34,7 @@ dependencies:
   firebase_core: ^3.8.0
   cloud_firestore: ^5.6.0
   firebase_auth: ^5.3.0
+  google_sign_in: ^6.2.1
   shared_preferences: ^2.2.2
   dartz: ^0.10.1
   flutter_secure_storage: ^9.0.0

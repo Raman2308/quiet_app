@@ -5,6 +5,7 @@ import 'package:app_quiet/features/auth/domain/usecases/signup_usecase.dart';
 import 'package:app_quiet/features/auth/domain/usecases/refresh_token_usecase.dart';
 import 'package:flutter/foundation.dart';
 import 'package:app_quiet/features/auth/domain/entities/auth_token.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthController extends ChangeNotifier {
   final AuthRepository repository;
@@ -15,6 +16,8 @@ class AuthController extends ChangeNotifier {
   AuthToken? _currentToken;
   bool _isLoading = false;
   String? _errorMessage;
+  User? _user;
+  bool _isAuthenticated = false;
 
   AuthToken? get currentToken => _currentToken;
   bool get isLoading => _isLoading;
@@ -29,6 +32,11 @@ class AuthController extends ChangeNotifier {
       '[AuthController] Initialized with repository: ${repository.runtimeType}',
     );
     _initializeToken();
+  }
+  void setAuthenticated(User user) {
+    _user = user;
+    _isAuthenticated = true;
+    notifyListeners();
   }
 
   /// Initialize token from cached token on startup
@@ -65,6 +73,24 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> login({required String email, required String password}) async {
+    if (email.isEmpty) {
+      _errorMessage = "Email cannot be empty";
+      notifyListeners();
+      return;
+    }
+
+    if (!email.contains("@")) {
+      _errorMessage = "Invalid email format";
+      notifyListeners();
+      return;
+    }
+
+    if (password.isEmpty) {
+      _errorMessage = "Password cannot be empty";
+      notifyListeners();
+      return;
+    }
+
     AppLogger.appInfo('[AuthController] Login attempt - Email: $email');
 
     _isLoading = true;
@@ -77,6 +103,7 @@ class AuthController extends ChangeNotifier {
         AppLogger.appError('[AuthController] Login failed: ${failure.message}');
         _errorMessage = failure.message;
         _currentToken = null;
+        notifyListeners();
       },
       (token) {
         final timeRemaining = token.expiresAt
@@ -182,20 +209,23 @@ class AuthController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
-      await repository.logout();
-      AppLogger.appInfo('[AuthController] Repository logout complete');
+    final result = await repository.logout();
 
-      await repository.clearTokens();
-      AppLogger.appInfo('[AuthController] All tokens cleared');
+    result.fold(
+      (failure) {
+        AppLogger.appError(
+          '[AuthController] Logout failed: ${failure.message}',
+        );
+      },
 
-      _currentToken = null;
-      AppLogger.appInfo(
-        '[AuthController] Logout successful - User session ended',
-      );
-    } catch (e) {
-      AppLogger.appError('[AuthController] Logout failed: $e', error: e);
-    }
+      (_) {
+        AppLogger.appInfo(
+          '[AuthController] Logout successful - Session cleared',
+        );
+
+        _currentToken = null;
+      },
+    );
 
     _isLoading = false;
     notifyListeners();

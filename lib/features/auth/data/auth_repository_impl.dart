@@ -33,20 +33,22 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
         idTokenResult.expirationTime ??
         DateTime.now().add(const Duration(hours: 1));
 
-    final now = DateTime.now();
-    final timeUntilExpiry = expirationTime.difference(now);
-
-    logger.info(
-      'AuthToken created | User: ${user.uid} | '
-      'Expires in: ${timeUntilExpiry.inMinutes} minutes | '
-      'Expiry: ${expirationTime.toIso8601String()}',
-    );
-
     final token = AuthToken(
       accessToken: idTokenResult.token ?? '',
       refreshToken: user.refreshToken ?? '',
       expiresAt: expirationTime,
     );
+
+    logger.info(
+      'Token generated | User: ${user.uid} | Expiry: ${expirationTime.toIso8601String()}',
+    );
+
+    /// Cache token
+    _cachedToken = token;
+
+    /// Persist token
+    await _tokenStorage.saveAccessToken(token.accessToken);
+    await _tokenStorage.saveRefreshToken(token.refreshToken);
 
     return token;
   }
@@ -66,6 +68,7 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
         );
 
         final user = cred.user!;
+
         logger.info('User created: ${user.uid}');
 
         /// Create Firestore user document
@@ -75,17 +78,7 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
           'role': 'user',
         });
 
-        /// Create token
-        final token = await _createAuthTokenFromUser(user);
-
-        /// Cache token
-        _cachedToken = token;
-
-        /// Save token securely
-        await _tokenStorage.saveAccessToken(token.accessToken);
-        await _tokenStorage.saveRefreshToken(token.refreshToken);
-
-        return token;
+        return await _createAuthTokenFromUser(user);
       },
       methodName: 'AuthRepository.signUp',
       data: {'email': email},
@@ -97,7 +90,7 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
     required String email,
     required String password,
   }) {
-    logger.info('AuthRepositoryImpl.login called with email=$email');
+    logger.info("AuthRepositoryImpl.login called with email=$email");
 
     return executeSafely(
       () async {
@@ -107,23 +100,10 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
         );
 
         final user = cred.user!;
-        logger.info('Login successful for user: ${user.uid}');
 
-        final token = await _createAuthTokenFromUser(user);
+        logger.info("User logged in: ${user.uid}");
 
-        /// Cache token
-        _cachedToken = token;
-
-        /// Save tokens to secure storage
-        await _tokenStorage.saveAccessToken(token.accessToken);
-        await _tokenStorage.saveRefreshToken(token.refreshToken);
-
-        logger.info(
-          'Login complete | User: ${user.uid} | '
-          'Token valid until: ${token.expiresAt.toIso8601String()}',
-        );
-
-        return token;
+        return await _createAuthTokenFromUser(user);
       },
       methodName: 'AuthRepository.login',
       data: {'email': email},
@@ -155,15 +135,9 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
         expiresAt: newExpiry,
       );
 
-      final oldExpiry = _cachedToken?.expiresAt;
-
-      if (oldExpiry != null) {
-        logger.info(
-          'Token refreshed | User: ${user.uid} | '
-          'Old expiry: ${oldExpiry.toIso8601String()} | '
-          'New expiry: ${newExpiry.toIso8601String()}',
-        );
-      }
+      logger.info(
+        'Token refreshed | User: ${user.uid} | New expiry: ${newExpiry.toIso8601String()}',
+      );
 
       _cachedToken = token;
 
@@ -177,18 +151,17 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() {
     final userId = _auth.currentUser?.uid;
+
     logger.info('Logout initiated for user: $userId');
 
     return executeSafely(() async {
       _cachedToken = null;
 
-      /// Clear tokens
       await _tokenStorage.clearTokens();
 
-      /// Firebase logout
       await _auth.signOut();
 
-      logger.info('User logged out: $userId');
+      logger.info('User logged out successfully: $userId');
     }, methodName: 'AuthRepository.logout');
   }
 

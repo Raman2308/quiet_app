@@ -35,7 +35,6 @@ class AppRouter {
       /// WRITING SCREEN
       case '/write':
         AppLogger.appInfo('[AppRouter] Loading WritingScreen');
-
         try {
           final postRepository = InjectionContainer.getPostRepository();
 

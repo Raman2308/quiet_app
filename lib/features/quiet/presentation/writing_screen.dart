@@ -1,9 +1,11 @@
+import 'package:app_quiet/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:app_quiet/features/quiet/domain/usecases/publish_post.dart';
 import 'package:flutter/material.dart';
 
 import 'package:app_quiet/features/quiet/domain/entities/post.dart';
 
 import 'package:app_quiet/core/logger/logger.dart';
+import 'package:provider/provider.dart';
 
 class WritingScreen extends StatefulWidget {
   final PublishPost publishPost;
@@ -75,6 +77,15 @@ class _WritingScreenState extends State<WritingScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                final controller = context.read<AuthController>();
+
+                await controller.logout();
+              },
+            ),
+
             TextField(
               controller: _controller,
               maxLines: 5,

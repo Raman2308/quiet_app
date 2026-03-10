@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../errors/failures.dart';
-import '../errors/failure_mapper.dart';
 
 import '../logger/logger.dart';
 
@@ -22,9 +22,34 @@ abstract class BaseRepository {
       logger.info('[$m] success. result: $result');
       return Right(result);
     } catch (e, stackTrace) {
-      // include error details and stack trace
-      logger.error('[$m] exception', error: e, stackTrace: stackTrace);
-      return Left(FailureMapper.mapException(e, stackTrace));
+      logger.error('[$methodName] exception', error: e, stackTrace: stackTrace);
+
+      if (e is FirebaseAuthException) {
+        switch (e.code) {
+          case "user-not-found":
+            return Left(AuthFailure("No account found for this email."));
+
+          case "wrong-password":
+            return Left(AuthFailure("Incorrect password."));
+
+          case "invalid-credential":
+            return Left(
+              AuthFailure(
+                "This account uses Google Sign-In. Please login with Google.",
+              ),
+            );
+
+          case "email-already-in-use":
+            return Left(
+              AuthFailure("Email already registered. Please login instead."),
+            );
+
+          default:
+            return Left(AuthFailure(e.message ?? "Authentication failed"));
+        }
+      }
+
+      return Left(ServerFailure("Unexpected error occurred."));
     }
   }
 }

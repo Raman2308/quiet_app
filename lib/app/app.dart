@@ -1,7 +1,13 @@
+import 'package:app_quiet/core/injection/injection_container.dart';
 import 'package:app_quiet/core/logger/app_logger.dart';
+import 'package:app_quiet/features/auth/presentation/auth_page.dart';
+import 'package:app_quiet/features/quiet/domain/usecases/publish_post.dart';
+import 'package:app_quiet/features/quiet/presentation/writing_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../features/auth/presentation/controllers/auth_controller.dart';
-import 'router.dart';
+
+import 'package:provider/provider.dart';
 
 class QuietApp extends StatelessWidget {
   final AuthController authController;
@@ -10,18 +16,34 @@ class QuietApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AppLogger.appInfo('[QuietApp] Created with AuthController');
+    return ChangeNotifierProvider<AuthController>.value(
+      value: authController,
+      child: MaterialApp(
+        title: 'Quiet App',
+        debugShowCheckedModeBanner: false,
 
-    AppLogger.appInfo('[QuietApp] Building app UI...');
-    return MaterialApp(
-      title: 'Quiet App',
-      debugShowCheckedModeBanner: false,
-      onGenerateRoute: (settings) {
-        AppLogger.appInfo('[QuietApp] Generating route for: ${settings.name}');
-        return AppRouter(
-          authController: authController,
-        ).generateRoute(settings);
-      },
+        home: StreamBuilder(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            /// user logged in
+            if (snapshot.hasData) {
+              return WritingScreen(
+                publishPost: PublishPost(
+                  InjectionContainer.getPostRepository(),
+                ),
+                logger: AppLogger(),
+              );
+            }
+
+            /// user logged out
+            return const AuthPage();
+          },
+        ),
+      ),
     );
   }
 }
